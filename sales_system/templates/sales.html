@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sales System</title>
+    <style>
+        body { font-family: Arial; margin: 30px; background: #f5f5f5; }
+        h1 { color: #0F6E56; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: #0F6E56; color: white; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f0f0f0; }
+        .btn { padding: 6px 12px; background: #0F6E56; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        .pending { color: orange; font-weight: bold; }
+        .completed { color: green; font-weight: bold; }
+        .canceled { color: red; font-weight: bold; }
+        input, select { padding: 7px; width: 100%; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .form-box { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; color: #0F6E56; text-decoration: none; font-weight: bold; }
+        .item-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .item-row select { flex: 2; }
+        .item-row input { flex: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <a href="http://localhost:5000">Inventory</a>
+        <a href="/">Sales</a>
+    </div>
+
+    <h1>Sales System</h1>
+
+    <a href="/new"><button class="btn">+ New Order</button></a>
+    <br><br>
+
+    {% if show_form %}
+    <div class="form-box">
+        <h3>New Order</h3>
+        <form method="POST" action="/new">
+
+            <h4>Customer Info</h4>
+            <label>Name</label>
+            <input type="text" name="name" required>
+            <label>Phone</label>
+            <input type="text" name="phone">
+            <label>Address</label>
+            <input type="text" name="address">
+
+            <h4>Order Items</h4>
+            <div id="items">
+                <div class="item-row">
+                    <select name="product_id" onchange="fillPrice(this)">
+                        <option value="">Select product...</option>
+                        {% for p in products %}
+                        <option value="{{ p.id }}" data-price="{{ p.price }}" data-name="{{ p.name }}">
+                            {{ p.name }} — ${{ p.price }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" name="quantity" placeholder="Qty" min="1" value="1">
+                    <input type="hidden" name="unit_price" class="price-field">
+                    <input type="hidden" name="product_name" class="name-field">
+                </div>
+            </div>
+
+            <button type="button" class="btn" onclick="addItem()" style="margin-bottom:10px">
+                + Add Item
+            </button>
+
+            <br>
+            <button class="btn" type="submit">Place Order</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <table>
+        <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Total</th>
+        </tr>
+        {% for order in orders %}
+        <tr>
+            <td>#{{ order[0] }}</td>
+            <td>{{ order[1] }}</td>
+            <td>{{ order[2] }}</td>
+            <td><span class="{{ order[3].lower() }}">{{ order[3] }}</span></td>
+            <td>${{ order[4] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <script>
+        function addItem() {
+            const container = document.getElementById("items");
+            const first = container.querySelector(".item-row");
+            const clone = first.cloneNode(true);
+            clone.querySelectorAll("input").forEach(i => i.value = "");
+            container.appendChild(clone);
+        }
+
+        document.addEventListener("change", function(e) {
+            if (e.target.name === "product_id") {
+                fillPrice(e.target);
+            }
+        });
+
+        function fillPrice(select) {
+            const option = select.options[select.selectedIndex];
+            const row = select.closest(".item-row");
+            row.querySelector(".price-field").value = option.dataset.price || "";
+            row.querySelector(".name-field").value = option.dataset.name || "";
+        }
+    </script>
+
+</body>
+</html>
